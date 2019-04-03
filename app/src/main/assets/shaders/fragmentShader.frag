@@ -37,10 +37,16 @@
 
 precision mediump float;                
 
+#define EFFECT_SLOPLINE     0
+#define EFFECT_SPLITLINE    1
+#define EFFECT_INCRESSLINE  2
+
 in vec2 v_texCoord;                     
 
 layout(location = 0) out vec4 outColor;                     
 
+uniform float u_frameid;
+uniform int u_effectid;
 uniform sampler2D s_baseMap;            
 uniform sampler2D s_lightMap;           
 
@@ -52,5 +58,26 @@ void main()
   	baseColor = texture( s_baseMap, v_texCoord ); 
   	lightColor = texture( s_lightMap, v_texCoord );
 
-  	outColor = baseColor * (lightColor + 0.25);   
+    if (u_effectid == EFFECT_SLOPLINE) {
+        float ratio = (v_texCoord.y - v_texCoord.x) < u_frameid ? 0.0 : 1.0;
+        outColor = mix(lightColor, baseColor, ratio);
+        return;
+    }
+
+    if (u_effectid == EFFECT_SPLITLINE) {
+        float ratio = abs(v_texCoord.x - 0.5) < u_frameid ? 0.0 : 1.0;
+        outColor = mix(lightColor, baseColor, ratio);
+        return;
+    }
+
+    if (u_effectid == EFFECT_INCRESSLINE) {
+        float ratio = 1.0;
+        if (v_texCoord.y < 0.3) {
+            ratio = v_texCoord.x < u_frameid ? 0.0 : 1.0;
+        } else if (v_texCoord.y > 0.7) {
+            ratio = v_texCoord.x > 1.0 - u_frameid ? 0.0 : 1.0;
+        }
+        outColor = mix(lightColor, baseColor, ratio);
+        return;
+    }
 }

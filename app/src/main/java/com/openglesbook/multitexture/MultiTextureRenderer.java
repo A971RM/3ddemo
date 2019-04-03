@@ -126,6 +126,8 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
       // Get the sampler locations
       mBaseMapLoc = GLES30.glGetUniformLocation ( mProgramObject, "s_baseMap" );
       mLightMapLoc = GLES30.glGetUniformLocation ( mProgramObject, "s_lightMap" );
+      mFrameidLoc = GLES30.glGetUniformLocation ( mProgramObject, "u_frameid" );
+      mEffectidLoc = GLES30.glGetUniformLocation ( mProgramObject, "u_effectid" );
 
       // Load the texture images from 'assets'
       mBaseMapTexId = loadTextureFromAsset ( "textures/basemap.png" );
@@ -139,6 +141,10 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
    //
    public void onDrawFrame ( GL10 glUnused )
    {
+      if (mStartTime < 0) {
+         mStartTime = System.currentTimeMillis();
+      }
+      double elapsedSeconds = (System.currentTimeMillis() - mStartTime) / 1000.0;
       // Set the view-port
       GLES30.glViewport ( 0, 0, mWidth, mHeight );
 
@@ -178,7 +184,42 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
       // Set the light map sampler to texture unit 1
       GLES30.glUniform1i ( mLightMapLoc, 1 );
 
+      int effectid = (int)(elapsedSeconds / mEffectTimePer);
+      float effectTime = (float) (elapsedSeconds - effectid * mEffectTimePer);
+      dealEffect(effectid, effectTime);
+
       GLES30.glDrawElements ( GLES30.GL_TRIANGLES, 6, GLES30.GL_UNSIGNED_SHORT, mIndices );
+      if (elapsedSeconds > mEfffectTimeSum) {
+         mStartTime = -1;
+      }
+   }
+
+   public void dealEffect(int effectid, float effectTime) {
+      GLES30.glUniform1i ( mEffectidLoc, effectid );
+      switch (effectid) {
+         case EFFECT_SLOPLINE:
+            dealSlopEffect(effectTime);
+            break;
+         case EFFECT_SPLITLINE:
+            dealSplitEffect(effectTime);
+            break;
+         case EFFECT_INCRESSLINE:
+            dealIncreaseEffect(effectTime);
+            break;
+          default:
+      }
+   }
+
+   public void dealSlopEffect(float effectTime) {
+      GLES30.glUniform1f ( mFrameidLoc, effectTime / mEffectTimePer * 2.f - 1.f );
+   }
+
+   public void dealSplitEffect(float effectTime) {
+      GLES30.glUniform1f ( mFrameidLoc, effectTime / mEffectTimePer * 0.5f);
+   }
+
+   public void dealIncreaseEffect(float effectTime) {
+      GLES30.glUniform1f ( mFrameidLoc, effectTime / mEffectTimePer);
    }
 
    ///
@@ -186,17 +227,29 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
    //
    public void onSurfaceChanged ( GL10 glUnused, int width, int height )
    {
+      mFrameid = 0;
       mWidth = width;
       mHeight = height;
    }
 
+   private final int EFFECT_SLOPLINE = 0;
+   private final int EFFECT_SPLITLINE = 1;
+   private final int EFFECT_INCRESSLINE = 2;
 
+   private float mEffectTimePer = 2.5f;
+   private int mEffectTimeNum = 3;
+   private float mEfffectTimeSum = mEffectTimeNum * mEffectTimePer;
+   private long mStartTime = -1;
+   private float mfps = 25.f;
+   private float mFrameid;
    // Handle to a program object
    private int mProgramObject;
 
    // Sampler location
    private int mBaseMapLoc;
    private int mLightMapLoc;
+   private int mFrameidLoc;
+   private int mEffectidLoc;
 
    // Texture handle
    private int mBaseMapTexId;
@@ -211,13 +264,13 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
 
    private final float[] mVerticesData =
    {
-      -0.5f,  0.5f, 0.0f, // Position 0
+      -1.0f,  1.0f, 0.0f, // Position 0
        0.0f,  0.0f,       // TexCoord 0
-      -0.5f, -0.5f, 0.0f, // Position 1
+      -1.0f, -1.0f, 0.0f, // Position 1
        0.0f,  1.0f,       // TexCoord 1
-       0.5f, -0.5f, 0.0f, // Position 2
+       1.0f, -1.0f, 0.0f, // Position 2
        1.0f,  1.0f,       // TexCoord 2
-       0.5f,  0.5f, 0.0f, // Position 3
+       1.0f,  1.0f, 0.0f, // Position 3
        1.0f,  0.0f        // TexCoord 3
    };
 
