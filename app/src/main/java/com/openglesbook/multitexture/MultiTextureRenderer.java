@@ -131,7 +131,7 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
 
       // Load the texture images from 'assets'
       mBaseMapTexId = loadTextureFromAsset ( "textures/basemap.png" );
-      mLightMapTexId = loadTextureFromAsset ( "textures/lightmap.png" );
+      mLightMapTexId = loadTextureFromAsset ( "textures/android.jpg" );
 
       GLES30.glClearColor ( 1.0f, 1.0f, 1.0f, 0.0f );
    }
@@ -206,12 +206,15 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
          case EFFECT_INCRESSLINE:
             dealIncreaseEffect(effectTime);
             break;
+         case EFFECT_INCRESSLINE_V:
+            dealIncreaseEffectV(effectTime);
+            break;
           default:
       }
    }
 
    public void dealSlopEffect(float effectTime) {
-      GLES30.glUniform1f ( mFrameidLoc, effectTime / mEffectTimePer * 2.f - 1.f );
+      GLES30.glUniform1f ( mFrameidLoc, 2.f - effectTime / mEffectTimePer * 2.f);
    }
 
    public void dealSplitEffect(float effectTime) {
@@ -220,6 +223,10 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
 
    public void dealIncreaseEffect(float effectTime) {
       GLES30.glUniform1f ( mFrameidLoc, effectTime / mEffectTimePer);
+   }
+
+   public void dealIncreaseEffectV(float effectTime) {
+      GLES30.glUniform1f ( mFrameidLoc, 0.7f - effectTime / mEffectTimePer);
    }
 
    ///
@@ -235,9 +242,10 @@ public class MultiTextureRenderer implements GLSurfaceView.Renderer
    private final int EFFECT_SLOPLINE = 0;
    private final int EFFECT_SPLITLINE = 1;
    private final int EFFECT_INCRESSLINE = 2;
+   private final int EFFECT_INCRESSLINE_V = 3;
 
    private float mEffectTimePer = 2.5f;
-   private int mEffectTimeNum = 3;
+   private int mEffectTimeNum = 4;
    private float mEfffectTimeSum = mEffectTimeNum * mEffectTimePer;
    private long mStartTime = -1;
    private float mfps = 25.f;
